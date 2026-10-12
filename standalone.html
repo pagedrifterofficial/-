@@ -1,0 +1,749 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>宛名さっと</title><style>:root{color-scheme:light}html,body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Shippori+Mincho+B1:wght@600&family=Noto+Serif+JP:wght@400;600&family=Noto+Sans+JP:wght@400;500&display=swap">
+<style>
+/* Layout: form on the left, a sticky desk with the paper preview on the right; the preview moves above the form on phones. */
+:root {
+  --bg: #eef1f4;
+  --surface: #ffffff;
+  --ink: #18212b;
+  --ink-2: #566371;
+  --line: #d3dae1;
+  --accent: #d4232b;
+  --accent-ink: #ffffff;
+  --accent-soft: #fbe7e8;
+  --desk: #dde3e9;
+  --focus: #1f6fd6;
+  --font-ui: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  --font-brand: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11161b; --surface: #192027; --ink: #e7ecf0; --ink-2: #98a5b1; --line: #2c363f;
+    --accent: #ee5a60; --accent-ink: #1a0a0b; --accent-soft: #3a1d1f; --desk: #0b0f13; --focus: #6aa8ff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11161b; --surface: #192027; --ink: #e7ecf0; --ink-2: #98a5b1; --line: #2c363f;
+  --accent: #ee5a60; --accent-ink: #1a0a0b; --accent-soft: #3a1d1f; --desk: #0b0f13; --focus: #6aa8ff;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-ui); font-size: 15px; line-height: 1.65;
+  padding-inline: clamp(16px, 4vw, 40px); padding-block: 22px 56px;
+}
+.wrap { max-width: 1120px; margin-inline: auto; }
+h1, h2, p { margin: 0; }
+
+.top { display: flex; align-items: center; gap: 14px 18px; flex-wrap: wrap; margin-bottom: 22px; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.postmark {
+  width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--accent); color: var(--accent);
+  display: grid; place-items: center; font-family: var(--font-brand); font-size: 24px; line-height: 1;
+  box-shadow: inset 0 0 0 3px var(--bg), inset 0 0 0 4px var(--accent);
+}
+h1 { font-family: var(--font-brand); font-size: 30px; font-weight: 600; letter-spacing: .06em; line-height: 1.2; text-wrap: balance; }
+.lead { color: var(--ink-2); flex: 1 1 300px; min-width: 0; max-width: 46ch; }
+
+.app { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 440px); gap: 32px; align-items: start; }
+.panel { min-width: 0; }
+.stage { min-width: 0; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); display: grid; gap: 12px; }
+@media (max-width: 880px) {
+  .app { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .stage { order: -1; position: static; }
+}
+
+.desk { background: var(--desk); border-radius: 10px; padding: clamp(14px, 3vw, 24px); display: grid; place-items: center; min-height: 220px; }
+#preview {
+  display: block; background: #fff; width: auto; height: auto; max-width: 100%; max-height: min(62vh, 560px);
+  box-shadow: 0 1px 2px rgba(0,0,0,.2), 0 12px 30px rgba(0,0,0,.18);
+}
+.caption { font-size: 12.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn {
+  font: inherit; font-weight: 700; font-size: 15px; padding: 10px 18px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+}
+.btn:hover { border-color: var(--ink-2); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.btn.primary:hover { filter: brightness(1.06); }
+.btn.quiet { font-weight: 500; font-size: 13px; padding: 5px 12px; color: var(--ink-2); }
+.viewer-note { font-size: 13.5px; border: 1px dashed var(--ink-2); border-radius: 8px; padding: 10px 12px; color: var(--ink); background: var(--surface); }
+#status { min-height: 1.6em; font-size: 13.5px; color: var(--ink-2); }
+
+.sample-note { background: var(--accent-soft); color: var(--ink); border-radius: 8px; padding: 9px 12px; font-size: 13.5px; margin-bottom: 20px; }
+
+.sec { display: grid; gap: 12px; margin-bottom: 28px; }
+.sec-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+h2 { font-size: 13px; font-weight: 700; letter-spacing: .12em; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 520px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field > label, .lbl { font-size: 12.5px; font-weight: 500; color: var(--ink-2); }
+.hint { font-size: 12.5px; color: var(--ink-2); }
+input[type="text"], input[type="number"], select {
+  font: inherit; font-size: 16px; width: 100%; min-width: 0; padding: 9px 11px; border-radius: 6px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+}
+input:focus-visible, select:focus-visible, .btn:focus-visible, summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.opt { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.opt > .lbl { color: var(--ink); }
+.check { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer; }
+.check input { width: 18px; height: 18px; accent-color: var(--accent); margin: 0; }
+
+.papers { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 8px; }
+.pp { position: relative; display: block; }
+.pp input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.pp .card {
+  display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: center; column-gap: 10px;
+  padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); min-height: 58px;
+}
+.pp .card b { font-size: 14px; line-height: 1.3; }
+.pp .card small { grid-column: 2; color: var(--ink-2); font-size: 12px; line-height: 1.3; }
+.pp .mini { grid-row: 1 / span 2; justify-self: center; display: block; border: 1.5px solid var(--ink-2); border-radius: 2px; position: relative; background: var(--surface); }
+.mini::after { content: ""; position: absolute; inset: 3px; opacity: .55; }
+.mini.v::after { background: repeating-linear-gradient(90deg, var(--ink-2) 0 1.5px, transparent 1.5px 4px); }
+.mini.h::after { background: repeating-linear-gradient(0deg, var(--ink-2) 0 1.5px, transparent 1.5px 4px); }
+.pp input:checked + .card { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+.pp input:focus-visible + .card { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.seg { display: inline-grid; grid-auto-flow: column; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.sg { position: relative; display: block; }
+.sg input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.sg span { display: block; padding: 6px 14px; font-size: 14px; font-weight: 500; background: var(--surface); color: var(--ink); white-space: nowrap; }
+.sg + .sg span { border-left: 1px solid var(--line); }
+.sg input:checked + span { background: var(--ink); color: var(--surface); }
+.sg input:focus-visible + span { outline: 2px solid var(--focus); outline-offset: -2px; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: inherit; font-size: 13px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.chip:hover { border-color: var(--ink-2); }
+.chip.red { color: var(--accent); border-color: var(--accent); }
+.chip.clear { color: var(--ink-2); }
+.chip:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+details.tips { border-top: 1px solid var(--line); padding-top: 12px; }
+details.tips summary { cursor: pointer; font-weight: 700; font-size: 14px; }
+details.tips ul { margin: 10px 0 0; padding-left: 1.3em; color: var(--ink-2); font-size: 13.5px; display: grid; gap: 4px; }
+.foot { margin-top: 18px; font-size: 12.5px; color: var(--ink-2); }
+
+#printArea { display: none; }
+@media print {
+  :root { padding: 0 !important; }
+  body { padding: 0 !important; background: #fff !important; }
+  body > *:not(#printArea):not(style):not(link):not(script) { display: none !important; }
+  #printArea { display: block; }
+  #printArea img { display: block; width: var(--pw); height: var(--ph); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .pp .card, .btn { transition: border-color .15s, background-color .15s; }
+}
+</style>
+<style id="pageStyle"></style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <span class="postmark" aria-hidden="true">〒</span>
+      <h1>宛名さっと</h1>
+    </div>
+    <p class="lead">宛先を入れると、はがき・封筒・シールの宛名面がその場で仕上がります。画像にして、そのまま印刷できます。</p>
+  </header>
+
+  <div class="app">
+    <form class="panel" id="form" autocomplete="off" onsubmit="return false">
+      <p class="sample-note" id="sampleNote">入力例が入っています。書き換えるとプレビューがすぐ変わります。</p>
+
+      <div class="sec" role="group" aria-labelledby="h-paper">
+        <div class="sec-head"><h2 id="h-paper">用紙</h2></div>
+        <div class="papers">
+          <label class="pp"><input type="radio" name="paper" value="hv" data-k="paper"><span class="card"><i class="mini v" style="width:20px;height:29px"></i><b>はがき</b><small>縦書き</small></span></label>
+          <label class="pp"><input type="radio" name="paper" value="hh" data-k="paper"><span class="card"><i class="mini h" style="width:20px;height:29px"></i><b>はがき</b><small>横書き</small></span></label>
+          <label class="pp"><input type="radio" name="paper" value="n3" data-k="paper"><span class="card"><i class="mini v" style="width:15px;height:30px"></i><b>長形3号</b><small>封筒 縦書き</small></span></label>
+          <label class="pp"><input type="radio" name="paper" value="lb" data-k="paper"><span class="card"><i class="mini h" style="width:30px;height:15px"></i><b>宛名シール</b><small>86.4×42.3mm</small></span></label>
+        </div>
+      </div>
+
+      <div class="sec" role="group" aria-labelledby="h-to">
+        <div class="sec-head">
+          <h2 id="h-to">宛先</h2>
+          <button type="button" class="btn quiet" id="btnClear">宛先をクリア</button>
+        </div>
+        <div class="grid2">
+          <div class="field"><label for="f-toZip">郵便番号</label><input type="text" id="f-toZip" data-k="toZip" inputmode="numeric" maxlength="9" placeholder="123-4567"></div>
+          <div class="field"><label for="f-honor">敬称</label>
+            <select id="f-honor" data-k="honor">
+              <option value="様">様</option><option value="御中">御中</option><option value="殿">殿</option>
+              <option value="先生">先生</option><option value="行">行</option><option value="宛">宛</option><option value="">なし</option>
+            </select>
+          </div>
+        </div>
+        <div class="field"><label for="f-toAddr1">住所</label><input type="text" id="f-toAddr1" data-k="toAddr1" placeholder="都道府県から入力">
+          <span class="hint">番地は「1-2-3」のように入力します。縦書きでは「一ー二ー三」に変わります。</span></div>
+        <div class="field"><label for="f-toAddr2">建物名・部屋番号</label><input type="text" id="f-toAddr2" data-k="toAddr2" placeholder="見本ビル4F"></div>
+        <div class="field"><label for="f-toCorp">会社名・部署名</label><input type="text" id="f-toCorp" data-k="toCorp" placeholder="空けておいても構いません"></div>
+        <div class="grid2">
+          <div class="field"><label for="f-toName">氏名</label><input type="text" id="f-toName" data-k="toName" placeholder="姓と名の間は空白"></div>
+          <div class="field"><label for="f-toName2">連名（ふたり目）</label><input type="text" id="f-toName2" data-k="toName2" placeholder="なければ空欄"></div>
+        </div>
+      </div>
+
+      <div class="sec" role="group" aria-labelledby="h-from" data-only="hv hh n3 lb">
+        <div class="sec-head">
+          <h2 id="h-from">差出人・発送元</h2>
+          <label class="check"><input type="checkbox" id="f-useFrom" data-k="useFrom">差出人・発送元も書く</label>
+        </div>
+        <div id="fromFields" class="sec" style="margin:0">
+          <div class="field"><label for="f-fromZip">郵便番号</label><input type="text" id="f-fromZip" data-k="fromZip" inputmode="numeric" maxlength="9" placeholder="765-4321"></div>
+          <div class="field"><label for="f-fromAddr1">住所</label><input type="text" id="f-fromAddr1" data-k="fromAddr1"></div>
+          <div class="field"><label for="f-fromAddr2">建物名・部屋番号</label><input type="text" id="f-fromAddr2" data-k="fromAddr2"></div>
+          <div class="field"><label for="f-fromCorp">会社名・部署名</label><input type="text" id="f-fromCorp" data-k="fromCorp" placeholder="個人の場合は空欄"></div>
+          <div class="field"><label for="f-fromName">氏名・担当者名</label><input type="text" id="f-fromName" data-k="fromName"></div>
+          <div class="field"><label for="f-fromTel">電話番号</label><input type="text" id="f-fromTel" data-k="fromTel" inputmode="tel" placeholder="例: 090-1234-5678"></div>
+        </div>
+      </div>
+
+      <div class="sec" role="group" aria-labelledby="h-mark">
+        <div class="sec-head"><h2 id="h-mark">郵便の種類・取扱表示</h2></div>
+        <div class="field">
+          <label for="f-markText">郵便の種類（枠で囲んで表示）</label>
+          <input type="text" id="f-markText" data-k="markText" placeholder="例: 第四種郵便物">
+          <div class="chips" data-target="f-markText">
+            <button type="button" class="chip" data-v="第四種郵便物">第四種郵便物</button>
+            <button type="button" class="chip" data-v="第三種郵便物">第三種郵便物</button>
+            <button type="button" class="chip" data-v="料金後納">料金後納</button>
+            <button type="button" class="chip" data-v="料金別納">料金別納</button>
+            <button type="button" class="chip clear" data-v="">なし</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-markNo">承認番号・差出事業所など（枠の中に小さく）</label>
+          <input type="text" id="f-markNo" data-k="markNo" placeholder="例: 東京 第12345号">
+        </div>
+        <div class="field">
+          <label for="f-noteText">取扱表示（赤字で表示）</label>
+          <input type="text" id="f-noteText" data-k="noteText" placeholder="例: 速達">
+          <div class="chips" data-target="f-noteText">
+            <button type="button" class="chip red" data-v="速達">速達</button>
+            <button type="button" class="chip red" data-v="書留">書留</button>
+            <button type="button" class="chip red" data-v="簡易書留">簡易書留</button>
+            <button type="button" class="chip red" data-v="配達日指定">配達日指定</button>
+            <button type="button" class="chip clear" data-v="">なし</button>
+          </div>
+        </div>
+        <p class="hint">枠の文言は自由に書き換えられます。表示の決まりは郵便の種類ごとに異なるので、差し出す前に日本郵便の案内で確認してください。</p>
+      </div>
+
+      <div class="sec" role="group" aria-labelledby="h-fin">
+        <div class="sec-head"><h2 id="h-fin">仕上げ</h2></div>
+        <div class="opt"><span class="lbl">書体</span>
+          <span class="seg">
+            <label class="sg"><input type="radio" name="font" value="serif" data-k="font"><span>明朝</span></label>
+            <label class="sg"><input type="radio" name="font" value="sans" data-k="font"><span>ゴシック</span></label>
+          </span>
+        </div>
+        <div class="opt" data-only="hv n3"><span class="lbl">縦書きの数字</span>
+          <span class="seg">
+            <label class="sg"><input type="radio" name="kansuji" value="1" data-k="kansuji"><span>漢数字</span></label>
+            <label class="sg"><input type="radio" name="kansuji" value="0" data-k="kansuji"><span>算用数字</span></label>
+          </span>
+        </div>
+        <div class="field" data-only="hv hh n3">
+          <label class="check"><input type="checkbox" id="f-frame" data-k="frame">郵便番号の枠線を描く</label>
+          <span class="hint">枠が印刷済みの官製はがきや封筒に刷るときは、オフにします。</span>
+        </div>
+        <div class="field"><span class="lbl">印刷位置の微調整（mm）</span>
+          <div class="grid2">
+            <div class="field"><label for="f-dx">右へ（マイナスで左へ）</label><input type="number" id="f-dx" data-k="dx" step="0.5" min="-10" max="10"></div>
+            <div class="field"><label for="f-dy">下へ（マイナスで上へ）</label><input type="number" id="f-dy" data-k="dy" step="0.5" min="-10" max="10"></div>
+          </div>
+        </div>
+      </div>
+
+      <details class="tips">
+        <summary>印刷のコツ</summary>
+        <ul>
+          <li>用紙サイズは画像と同じものを選びます（はがき 100×148mm、長形3号 120×235mm）。</li>
+          <li>倍率は100％、余白はなし、ヘッダーとフッターはオフにします。</li>
+          <li>先にコピー用紙へ試し刷りして、はがきや封筒に重ねて光に透かすと位置を確かめられます。</li>
+          <li>ずれたときは、微調整で0.5mmずつ動かします。</li>
+        </ul>
+      </details>
+      <p class="foot">入力した内容はこの端末の中だけで処理され、送信されません。</p>
+    </form>
+
+    <section class="stage" aria-label="プレビュー">
+      <div class="desk"><img id="preview" alt="宛名面のプレビュー" width="1200" height="1776"></div>
+      <p class="caption" id="caption"></p>
+      <div class="actions">
+        <button type="button" class="btn primary only-standalone" id="btnSave">画像を保存</button>
+        <button type="button" class="btn only-standalone" id="btnPrint">印刷する</button>
+        <button type="button" class="btn" id="btnCopy">画像をコピー</button>
+      </div>
+      <p class="viewer-note only-embedded" hidden>この表示では保存・印刷ボタンが使えません。プレビューの画像を長押し（パソコンは右クリック）して「画像を保存」を選んでください。</p>
+      <p id="status" role="status" aria-live="polite"></p>
+    </section>
+  </div>
+</div>
+
+<div id="printArea" aria-hidden="true"><img id="printImg" alt=""></div>
+
+<script>
+(function () {
+  'use strict';
+  var MM = 12; // 1mm = 12px (約305dpi)
+  var ADV = 1.04;
+  var STORE = 'atena-sassato-v1';
+  var SERIF = '"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","MS PMincho",serif';
+  var SANS = '"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif';
+  var INK = '#111';
+  var RED = '#d9262c';
+  var KAN = '〇一二三四五六七八九';
+  var HYPHEN = /[\-‐‑‒–—―−]/;
+  var ROT = /[ー〜~…‥()\[\]「」『』【】〈〉《》{}<>=]/;
+  var SMALL = /[ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮヵヶ]/;
+  var PUNCT = /[、。,.]/;
+
+  var DEFAULTS = {
+    paper: 'hv', font: 'serif', kansuji: true, frame: true, useFrom: true,
+    toZip: '1234567', toAddr1: '東京都千代田区サンプル町1-2-3', toAddr2: '見本ビル4F', toCorp: '',
+    toName: '山田 太郎', toName2: '', honor: '様',
+    fromZip: '7654321', fromAddr1: '神奈川県横浜市見本区例町5-6-7', fromAddr2: '', fromName: '鈴木 花子',
+    fromCorp: '', fromTel: '',
+    markText: '', markNo: '', noteText: '',
+    dx: 0, dy: 0
+  };
+  var S = JSON.parse(JSON.stringify(DEFAULTS));
+  var stored = false;
+
+  function $(id) { return document.getElementById(id); }
+  function digits(s) { return String(s || '').normalize('NFKC').replace(/\D/g, ''); }
+  function fmtZip(d) { return d.length > 3 ? d.slice(0, 3) + '-' + d.slice(3) : d; }
+  function has(t) { return !!(t && String(t).trim()); }
+
+  // ---------- 縦書き ----------
+  function tokenize(str, kan) {
+    var s = Array.from(String(str).normalize('NFKC'));
+    var out = [];
+    for (var i = 0; i < s.length; i++) {
+      var ch = s[i];
+      if (/\s/.test(ch)) { if (out.length && !out[out.length - 1].gap) out.push({ gap: 0.5 }); continue; }
+      if (HYPHEN.test(ch)) { out.push({ c: 'ー', rot: true }); continue; }
+      if (/[0-9]/.test(ch)) {
+        if (kan) { out.push({ c: KAN[+ch] }); continue; }
+        var j = i; while (j < s.length && /[0-9]/.test(s[j])) j++;
+        var run = s.slice(i, j).join('');
+        if (run.length <= 2) out.push({ c: run, tcy: true });
+        else for (var d = 0; d < run.length; d++) out.push({ c: run[d] });
+        i = j - 1; continue;
+      }
+      var t = { c: ch };
+      if (ROT.test(ch)) t.rot = true;
+      else if (SMALL.test(ch)) t.small = true;
+      else if (PUNCT.test(ch)) t.punct = true;
+      out.push(t);
+    }
+    while (out.length && out[out.length - 1].gap) out.pop();
+    return out;
+  }
+
+  function vcols(text, size, min, maxH, kan) {
+    var tk = tokenize(text, kan);
+    var n = 0; tk.forEach(function (k) { n += k.gap || 1; });
+    var s = size, need = n * size * ADV;
+    if (need > maxH) s = Math.max(min, size * maxH / need);
+    var cap = Math.max(1, maxH / (s * ADV));
+    var cols = [], cur = [], acc = 0;
+    tk.forEach(function (k) {
+      var w = k.gap || 1;
+      if (acc + w > cap + 1e-6 && cur.length) { cols.push(cur); cur = []; acc = 0; }
+      if (k.gap && !cur.length) return;
+      cur.push(k); acc += w;
+    });
+    if (cur.length) cols.push(cur);
+    return { size: s, cols: cols };
+  }
+
+  function fontFn() {
+    var fam = S.font === 'serif' ? SERIF : SANS;
+    var boldW = S.font === 'serif' ? 600 : 500;
+    return function (s, bold) { return (bold ? boldW : 400) + ' ' + s + 'px ' + fam; };
+  }
+
+  function drawVCol(ctx, tokens, cx, y0, s, font, bold) {
+    var adv = s * ADV, y = y0;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = font(s, bold);
+    tokens.forEach(function (k) {
+      if (k.gap) { y += k.gap * adv; return; }
+      var cy = y + adv / 2;
+      if (k.tcy) {
+        ctx.save(); ctx.font = font(s * 0.8, bold);
+        var m = ctx.measureText(k.c).width, sc = Math.min(1, s * 0.96 / m);
+        ctx.translate(cx, cy); ctx.scale(sc, 1); ctx.fillText(k.c, 0, 0); ctx.restore();
+      } else if (k.rot) {
+        ctx.save(); ctx.translate(cx, cy); ctx.rotate(Math.PI / 2); ctx.fillText(k.c, 0, 0); ctx.restore();
+      } else {
+        var dx = 0, dy = 0;
+        if (k.small) { dx = s * 0.11; dy = -s * 0.11; }
+        if (k.punct) { dx = s * 0.6; dy = -s * 0.6; }
+        ctx.fillText(k.c, cx + dx, cy + dy);
+      }
+      y += adv;
+    });
+  }
+
+  function flow(ctx, cursor, colK, font) {
+    var o = { cur: cursor };
+    o.put = function (text, size, min, y0, bottom, bold) {
+      if (!has(text)) return;
+      var r = vcols(text, size, min, bottom - y0, S.kansuji);
+      r.cols.forEach(function (col) {
+        var w = r.size * colK;
+        drawVCol(ctx, col, o.cur - w / 2, y0, r.size, font, bold);
+        o.cur -= w;
+      });
+    };
+    return o;
+  }
+
+  // ---------- 郵便番号の枠 ----------
+  function zipBoxes(ctx, zip, z, frame, font) {
+    var d = digits(zip).slice(0, 7);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (var i = 0; i < 7; i++) {
+      var x = z.x0 + i * z.pitch;
+      if (frame) { ctx.strokeStyle = RED; ctx.lineWidth = 0.35; ctx.strokeRect(x, z.y0, z.w, z.h); }
+      if (d[i]) { ctx.fillStyle = INK; ctx.font = font(z.fs, true); ctx.fillText(d[i], x + z.w / 2, z.y0 + z.h / 2 + 0.15); }
+    }
+    if (frame) { ctx.fillStyle = RED; ctx.font = font(z.h * 0.6, false); ctx.fillText('〒', z.x0 - z.w * 0.9, z.y0 + z.h / 2); ctx.fillStyle = INK; }
+  }
+
+  // ---------- 横書き ----------
+  function hText(ctx, text, x, y, size, maxW, font, bold, center) {
+    if (!has(text)) return;
+    var s = size;
+    ctx.textAlign = center ? 'center' : 'left'; ctx.textBaseline = 'middle'; ctx.font = font(s, bold);
+    var w = ctx.measureText(text).width;
+    if (w > maxW) { s = Math.max(size * 0.62, size * maxW / w); ctx.font = font(s, bold); w = ctx.measureText(text).width; }
+    if (w > maxW) { ctx.save(); ctx.translate(x, y); ctx.scale(maxW / w, 1); ctx.fillText(text, 0, 0); ctx.restore(); }
+    else ctx.fillText(text, x, y);
+  }
+
+  // ---------- 郵便の種類・取扱表示 ----------
+  var MARK = {
+    hv: { a: { x: 6, y: 8, w: 28, s1: 3.6, s2: 2.6 } },
+    hh: { a: { x: 6, y: 8, w: 28, s1: 3.6, s2: 2.6 } },
+    n3: { a: { x: 8, y: 10, w: 40, s1: 4.6, s2: 3.2 } },
+    lb: { a: { x: 29, y: 2.5, w: 31, s1: 3.2, s2: 2.4 }, b: { x: 62, y: 2.5, w: 19.4, s1: 3.2 } }
+  };
+  function markBox(ctx, font, text, no, p, color) {
+    var pad = 1.2, hasNo = has(no);
+    var h = pad * 2 + p.s1 * 1.15 + (hasNo ? p.s2 * 1.3 + 0.3 : 0);
+    var cx = p.x + p.w / 2;
+    ctx.strokeStyle = color; ctx.lineWidth = 0.35; ctx.strokeRect(p.x, p.y, p.w, h);
+    ctx.fillStyle = color;
+    hText(ctx, String(text).trim(), cx, p.y + pad + p.s1 * 0.575, p.s1, p.w - pad * 2, font, true, true);
+    if (hasNo) hText(ctx, String(no).trim(), cx, p.y + pad + p.s1 * 1.15 + p.s2 * 0.65 + 0.3, p.s2, p.w - pad * 2, font, false, true);
+    ctx.fillStyle = INK;
+    return h;
+  }
+  function drawMarks(ctx, font) {
+    var m = MARK[S.paper];
+    if (!m) return;
+    var ha = 0;
+    if (has(S.markText)) ha = markBox(ctx, font, S.markText, S.markNo, m.a, INK);
+    if (has(S.noteText)) {
+      var b = m.b ? m.b : { x: m.a.x, y: m.a.y + (ha ? ha + 3 : 0), w: m.a.w < 30 ? 20 : 24, s1: m.a.s1 };
+      markBox(ctx, font, S.noteText, '', b, RED);
+    }
+  }
+
+  function namesList() {
+    return [S.toName, S.toName2].filter(has).map(function (n) { return String(n).trim(); });
+  }
+
+  // ---------- 用紙ごとの描画 ----------
+  var GEO = {
+    hv: {
+      zip: { x0: 44, y0: 12, w: 6, h: 8, pitch: 7, fs: 6.4 },
+      fz: { x0: 13.5, y0: 131, w: 4.4, h: 5.6, pitch: 5.1, fs: 3.8 },
+      cursor: 87.5, colK: 1.32, addrSize: 5.3, addrMin: 3.4, addrY: 30, corpY: 42, addrBottom: 140,
+      nameSize: 8.8, nameMin: 5, nameY: 46, nameBottom: 140, nameCenter: 52,
+      fromCursor: 35, fSize: 3.5, fMin: 2.4, fY: 75, fNameSize: 4.4, fNameY: 88, fBottom: 127
+    },
+    n3: {
+      zip: { x0: 62, y0: 14, w: 6, h: 8.5, pitch: 7.2, fs: 6.6 },
+      fz: { x0: 10, y0: 214, w: 4.8, h: 6, pitch: 5.6, fs: 4.2 },
+      cursor: 112, colK: 1.32, addrSize: 6.4, addrMin: 4, addrY: 40, corpY: 52, addrBottom: 212,
+      nameSize: 10.8, nameMin: 6, nameY: 74, nameBottom: 212, nameCenter: 62,
+      fromCursor: 48, fSize: 4, fMin: 2.8, fY: 128, fNameSize: 5, fNameY: 142, fBottom: 205
+    }
+  };
+  var HZIP = GEO.hv.zip, HFZ = GEO.hv.fz;
+
+  function drawV(ctx, g) {
+    var font = fontFn();
+    ctx.fillStyle = INK;
+    zipBoxes(ctx, S.toZip, g.zip, S.frame, font);
+    drawMarks(ctx, font);
+    var r = flow(ctx, g.cursor, g.colK, font);
+    r.put(S.toAddr1, g.addrSize, g.addrMin, g.addrY, g.addrBottom, false);
+    r.put(S.toAddr2, g.addrSize, g.addrMin, g.addrY, g.addrBottom, false);
+    r.put(S.toCorp, g.addrSize, g.addrMin, g.corpY, g.addrBottom, false);
+    var blocks = namesList().map(function (n) {
+      return vcols((n + ' ' + (S.honor || '')).trim(), g.nameSize, g.nameMin, g.nameBottom - g.nameY, S.kansuji);
+    });
+    var total = 0;
+    blocks.forEach(function (b) { total += b.cols.length * b.size * g.colK; });
+    var right = Math.min(r.cur - 0.5, g.nameCenter + total / 2);
+    blocks.forEach(function (b) {
+      b.cols.forEach(function (col) {
+        var w = b.size * g.colK;
+        drawVCol(ctx, col, right - w / 2, g.nameY, b.size, font, true);
+        right -= w;
+      });
+    });
+    if (S.useFrom) {
+      zipBoxes(ctx, S.fromZip, g.fz, S.frame, font);
+      var f = flow(ctx, g.fromCursor, g.colK, font);
+      f.put(S.fromAddr1, g.fSize, g.fMin, g.fY, g.fBottom, false);
+      f.put(S.fromAddr2, g.fSize, g.fMin, g.fY, g.fBottom, false);
+      f.put(S.fromCorp, g.fSize, g.fMin, g.fY, g.fBottom, false);
+      f.put(S.fromName, g.fNameSize, g.fMin, g.fNameY, g.fBottom, true);
+      f.put(has(S.fromTel) ? '電話 ' + S.fromTel : '', g.fSize, g.fMin, g.fY, g.fBottom, false);
+    }
+  }
+
+  function drawHH(ctx) {
+    var font = fontFn(), X = 12, W = 76, y = 38;
+    ctx.fillStyle = INK;
+    zipBoxes(ctx, S.toZip, HZIP, S.frame, font);
+    drawMarks(ctx, font);
+    [S.toAddr1, S.toAddr2, S.toCorp].forEach(function (t) {
+      if (has(t)) { hText(ctx, String(t).trim(), X, y, 4.8, W, font, false); y += 7.8; }
+    });
+    y += 3.5;
+    namesList().forEach(function (n) {
+      hText(ctx, (n + '　' + (S.honor || '')).trim(), X, y + 4, 8.4, W, font, true); y += 12.5;
+    });
+    if (S.useFrom) {
+      zipBoxes(ctx, S.fromZip, HFZ, S.frame, font);
+      var sy = 99;
+      [S.fromAddr1, S.fromAddr2, S.fromCorp].forEach(function (t) {
+        if (has(t)) { hText(ctx, String(t).trim(), X, sy, 3.6, 62, font, false); sy += 5.4; }
+      });
+      if (has(S.fromName)) hText(ctx, String(S.fromName).trim(), X, sy + 2.6, 4.6, 62, font, true);
+      if (has(S.fromTel)) hText(ctx, '電話 ' + String(S.fromTel).trim(), X, sy + (has(S.fromName) ? 8.4 : 2.6), 3.4, 62, font, false);
+    }
+  }
+
+  function drawLB(ctx) {
+    var font = fontFn(), X = 6, W = 74.4, y = 9;
+    ctx.fillStyle = INK;
+    var z = digits(S.toZip).slice(0, 7);
+    if (z) hText(ctx, '〒' + fmtZip(z), X, 8, 3.6, 22, font, false);
+    if (z || has(S.markText) || has(S.noteText)) y = 14.2;
+    var tight = S.useFrom && (digits(S.fromZip) || has(S.fromAddr1) || has(S.fromAddr2) || has(S.fromCorp) || has(S.fromName) || has(S.fromTel));
+    drawMarks(ctx, font);
+    [S.toAddr1, S.toAddr2, S.toCorp].forEach(function (t) {
+      if (has(t)) { hText(ctx, String(t).trim(), X, y, tight ? 3.6 : 3.9, W, font, false); y += tight ? 4.6 : 5.2; }
+    });
+    var nm = namesList();
+    if (nm.length) {
+      var line = nm.map(function (n) { return (n + '　' + (S.honor || '')).trim(); }).join('　');
+      hText(ctx, line, X, y + (tight ? 3.4 : 4.2), tight ? 5.4 : 6, W, font, true);
+    }
+    if (tight) {
+      var fz = digits(S.fromZip).slice(0, 7);
+      var l1 = ['発送元', fz ? '〒' + fmtZip(fz) : '', S.fromAddr1, S.fromAddr2].filter(has)
+        .map(function (t) { return String(t).trim(); }).join(' ');
+      var l2 = [S.fromCorp, S.fromName, has(S.fromTel) ? '電話 ' + S.fromTel : ''].filter(has)
+        .map(function (t) { return String(t).trim(); }).join('　');
+      hText(ctx, l1, X, 37.6, 2.5, W, font, false);
+      hText(ctx, l2, X, 40.6, 2.5, W, font, false);
+    }
+  }
+
+  var PAPERS = {
+    hv: { w: 100, h: 148, label: 'はがき 縦書き', draw: function (c) { drawV(c, GEO.hv); } },
+    hh: { w: 100, h: 148, label: 'はがき 横書き', draw: drawHH },
+    n3: { w: 120, h: 235, label: '長形3号 封筒', draw: function (c) { drawV(c, GEO.n3); } },
+    lb: { w: 86.4, h: 42.3, label: '宛名シール', draw: drawLB }
+  };
+
+  function draw() {
+    var P = PAPERS[S.paper];
+    var cv = document.createElement('canvas');
+    cv.width = Math.round(P.w * MM); cv.height = Math.round(P.h * MM);
+    var ctx = cv.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.scale(MM, MM);
+    ctx.translate(S.dx || 0, S.dy || 0);
+    ctx.fillStyle = INK;
+    P.draw(ctx);
+    return cv;
+  }
+
+  // ---------- PNG(印刷解像度つき) ----------
+  var crcT = null;
+  function crc32(b) {
+    if (!crcT) {
+      crcT = new Uint32Array(256);
+      for (var n = 0; n < 256; n++) { var c = n; for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; crcT[n] = c >>> 0; }
+    }
+    var c2 = 0xFFFFFFFF;
+    for (var i = 0; i < b.length; i++) c2 = crcT[(c2 ^ b[i]) & 255] ^ (c2 >>> 8);
+    return (c2 ^ 0xFFFFFFFF) >>> 0;
+  }
+  function withDpi(blob) {
+    return blob.arrayBuffer().then(function (ab) {
+      var buf = new Uint8Array(ab);
+      if (buf[1] !== 0x50 || buf[2] !== 0x4E || buf[3] !== 0x47) return blob;
+      var chunk = new Uint8Array(21), dv = new DataView(chunk.buffer);
+      dv.setUint32(0, 9); chunk.set([0x70, 0x48, 0x59, 0x73], 4);
+      dv.setUint32(8, MM * 1000); dv.setUint32(12, MM * 1000); chunk[16] = 1;
+      dv.setUint32(17, crc32(chunk.subarray(4, 17)));
+      var out = new Uint8Array(buf.length + 21);
+      out.set(buf.subarray(0, 33)); out.set(chunk, 33); out.set(buf.subarray(33), 54);
+      return new Blob([out], { type: 'image/png' });
+    }).catch(function () { return blob; });
+  }
+
+  // ---------- 更新 ----------
+  var imgEl = $('preview'), printImg = $('printImg');
+  var timer = 0, seq = 0, blobUrl = '', lastBlob = null;
+
+  function allText() {
+    return ['toAddr1', 'toAddr2', 'toCorp', 'toName', 'toName2', 'honor', 'fromAddr1', 'fromAddr2', 'fromName', 'markText', 'markNo', 'noteText', 'fromCorp', 'fromTel']
+      .map(function (k) { return S[k] || ''; }).join('') + '0123456789-〒一二三四五六七八九〇';
+  }
+  function ensureFonts(text) {
+    var fam = S.font === 'serif' ? '"Noto Serif JP"' : '"Noto Sans JP"';
+    var bw = S.font === 'serif' ? 600 : 500;
+    var job = Promise.all([
+      document.fonts.load('400 40px ' + fam, text),
+      document.fonts.load(bw + ' 40px ' + fam, text)
+    ]).catch(function () {});
+    var wait = new Promise(function (r) { setTimeout(r, 4000); });
+    return Promise.race([job, wait]);
+  }
+  function schedule() { clearTimeout(timer); timer = setTimeout(update, 100); }
+  function update() {
+    var my = ++seq;
+    return ensureFonts(allText()).then(function () {
+      if (my !== seq) return;
+      var cv = draw();
+      $('caption').textContent = PAPERS[S.paper].label + '　' + PAPERS[S.paper].w + '×' + PAPERS[S.paper].h + 'mm　画像 ' + cv.width + '×' + cv.height + 'px';
+      return new Promise(function (res) { cv.toBlob(res, 'image/png'); }).then(function (b) {
+        if (my !== seq || !b) return;
+        return withDpi(b).then(function (out) {
+          if (my !== seq) return;
+          var old = blobUrl;
+          lastBlob = out; blobUrl = URL.createObjectURL(out);
+          imgEl.src = blobUrl; printImg.src = blobUrl;
+          if (old) URL.revokeObjectURL(old);
+        });
+      });
+    });
+  }
+
+  // ---------- フォームとの結びつき ----------
+  function save() { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) {} }
+  function load() {
+    try {
+      var j = JSON.parse(localStorage.getItem(STORE) || 'null');
+      if (j && typeof j === 'object') { Object.keys(DEFAULTS).forEach(function (k) { if (k in j) S[k] = j[k]; }); stored = true; }
+    } catch (e) {}
+    if (!PAPERS[S.paper]) S.paper = 'hv';
+  }
+  function sync() {
+    document.querySelectorAll('[data-k]').forEach(function (el) {
+      var k = el.dataset.k;
+      if (el.type === 'checkbox') el.checked = !!S[k];
+      else if (el.type === 'radio') el.checked = (k === 'kansuji' ? (S.kansuji ? '1' : '0') : String(S[k])) === el.value;
+      else if (k === 'toZip' || k === 'fromZip') el.value = fmtZip(digits(S[k]));
+      else el.value = S[k] == null ? '' : S[k];
+    });
+    $('fromFields').hidden = !S.useFrom;
+  }
+  function applyPaper() {
+    var P = PAPERS[S.paper];
+    imgEl.width = Math.round(P.w * MM); imgEl.height = Math.round(P.h * MM);
+    $('pageStyle').textContent = '@page{size:' + P.w + 'mm ' + P.h + 'mm;margin:0}';
+    var pa = $('printArea');
+    pa.style.setProperty('--pw', P.w + 'mm'); pa.style.setProperty('--ph', P.h + 'mm');
+    document.querySelectorAll('[data-only]').forEach(function (el) {
+      el.hidden = el.dataset.only.split(' ').indexOf(S.paper) < 0;
+    });
+  }
+  function onInput(e) {
+    var el = e.target, k = el.dataset.k, v;
+    if (!k) return;
+    if (el.type === 'checkbox') v = el.checked;
+    else if (el.type === 'radio') { if (!el.checked) return; v = el.value; if (k === 'kansuji') v = (v === '1'); }
+    else if (el.type === 'number') v = Math.max(-10, Math.min(10, parseFloat(el.value) || 0));
+    else if (k === 'toZip' || k === 'fromZip') v = digits(el.value).slice(0, 7);
+    else v = el.value;
+    S[k] = v;
+    if (k === 'paper') applyPaper();
+    if (k === 'useFrom') $('fromFields').hidden = !v;
+    $('sampleNote').hidden = true;
+    save(); schedule();
+  }
+
+  function say(t) { $('status').textContent = t; }
+
+  load();
+  sync(); applyPaper();
+  $('sampleNote').hidden = stored;
+  document.querySelectorAll('[data-k]').forEach(function (el) {
+    el.addEventListener('input', onInput);
+    el.addEventListener('change', onInput);
+  });
+  ['f-toZip', 'f-fromZip'].forEach(function (id) {
+    $(id).addEventListener('blur', function (e) { e.target.value = fmtZip(digits(e.target.value)); });
+  });
+  document.querySelectorAll('.chip').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var t = $(b.parentNode.dataset.target);
+      t.value = b.dataset.v;
+      t.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+  });
+  $('btnClear').addEventListener('click', function () {
+    ['toZip', 'toAddr1', 'toAddr2', 'toCorp', 'toName', 'toName2'].forEach(function (k) { S[k] = ''; });
+    sync(); $('sampleNote').hidden = true; save(); schedule(); say('宛先を空にしました');
+  });
+
+  var embedded = true;
+  try { embedded = window.self !== window.top; } catch (e) { embedded = true; }
+  document.querySelectorAll('.only-standalone').forEach(function (el) { el.hidden = embedded; });
+  document.querySelectorAll('.only-embedded').forEach(function (el) { el.hidden = !embedded; });
+
+  $('btnSave').addEventListener('click', function () {
+    if (!blobUrl) return;
+    var a = document.createElement('a');
+    a.href = blobUrl; a.download = 'atena-' + S.paper + '.png';
+    document.body.appendChild(a); a.click(); a.remove();
+    say('画像を保存しました');
+  });
+  $('btnPrint').addEventListener('click', function () {
+    if (!blobUrl) return;
+    try { window.print(); } catch (e) { say('印刷を開始できませんでした。画像を保存して印刷してください'); }
+  });
+  $('btnCopy').addEventListener('click', function () {
+    if (!lastBlob) return;
+    var p;
+    try { p = navigator.clipboard.write([new ClipboardItem({ 'image/png': lastBlob })]); }
+    catch (e) { p = Promise.reject(e); }
+    p.then(function () { say('画像をコピーしました'); })
+     .catch(function () { say('この環境ではコピーできません。プレビューを長押し（パソコンは右クリック）して保存してください'); });
+  });
+
+  schedule();
+})();
+</script>
+</body></html>
